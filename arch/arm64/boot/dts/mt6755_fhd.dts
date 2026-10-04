@@ -19,7 +19,7 @@
 };
 
 &i2c0 {
-	/* The M6 base description selects FT5X26 at 0x38. */
+	/* The base description selects FT5X26 at 0x38. */
 	ft5x26@38 {
 		status = "disabled";
 	};
