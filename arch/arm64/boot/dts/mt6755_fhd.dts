@@ -1,0 +1,38 @@
+/dts-v1/;
+
+#include "meizu_m6.dts"
+
+/* Common FHD board defaults.  The included MT6755 description supplies the
+ * platform devices; this file selects the display and touch variants. */
+/ {
+	model = "MT6755 FHD";
+	compatible = "mediatek,MT6755";
+
+	chosen {
+		atag,videolfb-lcmname = "nt35695_fhd_dsi_cmd_truly_nt50358_drv";
+	};
+};
+
+&touch {
+	tpd-resolution = <1080 1920>;
+	tpd-max-touch-num = <5>;
+};
+
+&i2c0 {
+	/* The M6 base description selects FT5X26 at 0x38. */
+	ft5x26@38 {
+		status = "disabled";
+	};
+
+	cap_touch@5d {
+		status = "disabled";
+	};
+
+	cap_touch@38 {
+		compatible = "mediatek,cap_touch";
+		reg = <0x38>;
+		rst-gpio = <&pio 10 0>;
+		int-gpio = <&pio 1 0>;
+		status = "okay";
+	};
+};
