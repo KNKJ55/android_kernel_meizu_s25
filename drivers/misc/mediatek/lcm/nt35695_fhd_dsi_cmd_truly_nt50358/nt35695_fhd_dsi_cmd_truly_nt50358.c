@@ -100,7 +100,7 @@ static LCM_UTIL_FUNCS lcm_util;
 
 #define TPS_I2C_BUSNUM  I2C_I2C_LCD_BIAS_CHANNEL	/* for I2C channel 0 */
 #define I2C_ID_NAME "tps65132"
-#define TPS_ADDR 0x3E
+#define TPS_ADDR 0x11
 
 #if defined(CONFIG_MTK_LEGACY)
 static struct i2c_board_info tps65132_board_info __initdata = { I2C_BOARD_INFO(I2C_ID_NAME, TPS_ADDR) };
@@ -1886,7 +1886,8 @@ static void *lcm_switch_mode(int mode)
 #include "lcdkit_fb_util.h"
 #endif
 
-static  void  set_lcm_panel_support(void)
+#ifdef CONFIG_LCDKIT_DRIVER
+static void set_lcm_panel_support(void)
 {
            lcdkit_info.panel_infos.cabc_support = 1;
            lcdkit_info.panel_infos.cabc_mode = 0;
@@ -1902,6 +1903,11 @@ static  void  set_lcm_panel_support(void)
            lcdkit_info.panel_infos.gpio_lcd_vsn = 90;
            lcdkit_info.panel_infos.gpio_lcd_vsp = 17;
 }
+#else
+static void set_lcm_panel_support(void)
+{
+}
+#endif
 
 LCM_DRIVER nt35695_fhd_dsi_cmd_truly_nt50358_lcm_drv = {
 	.name = "nt35695_fhd_dsi_cmd_truly_nt50358_drv",
