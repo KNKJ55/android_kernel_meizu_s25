@@ -5,7 +5,8 @@
 #include "cust.dtsi"
 
 / {
-	compatible = "meizu,m6", "mediatek,MT6755";
+	model = "s25";
+	compatible = "meizu,s25", "mediatek,MT6755";
 	memory@40000000 {
 		device_type = "memory";
 		reg = <0 0x40000000 0 0x3e800000>;
@@ -23,7 +24,7 @@
 		atag,videolfb-islcm_inited = <0>;
 		atag,videolfb-fps= <6000>;
 		atag,videolfb-vramSize= <0x01800000>;
-		atag,videolfb-lcmname= "ili9881p_hd_dsi_txd";
+		atag,videolfb-lcmname= "nt35695_fhd_dsi_cmd_truly_nt50358_drv";
 	};
 	led0:led@0 {
 		compatible = "mediatek,red";
@@ -65,7 +66,7 @@
 	};
 	led6:led@6 {
 		compatible = "mediatek,lcd-backlight";
-		led_mode = <5>;	/* M6: CUST_BLS_PWM DISP_PWM like stock (was <4> inert) */
+		led_mode = <5>;	/* CUST_BLS_PWM DISP_PWM */
 		data = <1>;
 		pwm_config = <0 0 0 0 0>;
 	};
@@ -81,7 +82,7 @@
 		vib_limit = <9>;
 		vib_vol= <5>;
 	};
-	/* M6: AWINIC AW8738 1-wire speaker PA (/dev/aw8738), EN = GPIO14, per stock */
+	/* AWINIC AW8738 1-wire speaker PA, EN = GPIO14. */
 	ext_pa_aw8738 {
 		compatible = "mediatek,aw8738-pa";
 		pinctrl-names = "default", "en_pin";
@@ -134,22 +135,6 @@
 hw_audio_info@0{
                         compatible = "mediatek,hw_audio_info";
                 };
-hw-dev-detect@0{
-		compatible = "meizu,m6-hw-dev-detect";
-		reg = <0x0 0x12C>;
-		i2c,touch_panel = <1>;
-		i2c,camera_slave = <1>;
-		i2c,camera_main = <1>;
-		i2c,g_sensor = <1>;
-		i2c,alsp = <1>;
-		i2c,charge = <1>;
-    i2c,compass = <1>;
-    /*i2c,sar = <1>;*/
-    i2c,otp_main = <1>;
-    i2c,otp_slave = <1>;
-    i2c,af = <1>;
-		status = "ok";
-	};
 };
 &accdet {
 		accdet-mic-vol = <7>;
@@ -177,36 +162,31 @@ hw-dev-detect@0{
 &pio {
 	lcm_pins_default: lcmdefault {
 	};
-	/* M6 BIAS FIX (stock Flyme 7.1.2.0G DTB/LK reverse): the TPS65132 panel
-	 * bias enables on this board are ENP=GPIO24, ENN=GPIO27 (stock
-	 * lcd_bias_enp1/enn0). The donor "yufangfang" wiring drove vsp=GPIO17
-	 * (FP pwr) / vsn=GPIO90 (unused) in vain while audio hpdepop held GPIO24
-	 * (ENP) low ~5s after boot -> +rail off -> black panel with live DSI/OVL.
-	 * Own the real enables here so resume/init drive them high. */
+	/* Panel bias enables are controlled by the board GPIO rails. */
 	lcm_pins_vsp_high: vsphigh {
 		pins_cmd_dat {
-			pins = <PINMUX_GPIO24__FUNC_GPIO24>;
+			pins = <PINMUX_GPIO43__FUNC_GPIO43>;
 				slew-rate = <1>;
 				output-high;
 		};
 	};
 	lcm_pins_vsp_low: vsplow {
 		pins_cmd_dat {
-			pins = <PINMUX_GPIO24__FUNC_GPIO24>;
+			pins = <PINMUX_GPIO43__FUNC_GPIO43>;
 				slew-rate = <1>;
 				output-low;
 		};
 	};
 	lcm_pins_vsn_high: vsnhigh {
 		pins_cmd_dat {
-			pins = <PINMUX_GPIO27__FUNC_GPIO27>;
+			pins = <PINMUX_GPIO42__FUNC_GPIO42>;
 				slew-rate = <1>;
 				output-high;
 		};
 	};
 	lcm_pins_vsn_low: vsnlow {
 		pins_cmd_dat {
-			pins = <PINMUX_GPIO27__FUNC_GPIO27>;
+			pins = <PINMUX_GPIO42__FUNC_GPIO42>;
 				slew-rate = <1>;
 				output-low;
 		};
@@ -231,33 +211,23 @@ hw-dev-detect@0{
 &touch {
 	bus_type = "i2c";
 	bus_id = <0>;
-	/* M6: stock Flyme DTB powers the touch panel from vldo28 (vtouch-supply =
-	 * ldo_vldo28), NOT the SoC-default "vtouch" rail. mt6755.dtsi inherits
-	 * vtouch-supply=<&mt_pmic_vtouch_ldo_reg>, but this PMIC has no VTOUCH LDO
-	 * -> regulator_get(vtouch) returns -EPROBE_DEFER forever -> VLDO28 never
-	 * enabled -> GT9xx chip unpowered -> i2c no-ACK at 0x5d (only bias 0x3e
-	 * answers on i2c-0). Re-point the supply at the real rail so the framework
-	 * enables it. FACT: live LDO_VLDO28_STATUS=0 before, stock vtouch-supply=
-	 * ldo_vldo28; FORGE I2C0 SCAN showed only 0x3e ACK. */
+	/* The touch panel is powered from the VLDO28 rail. */
 	vtouch-supply = <&mt_pmic_vldo28_ldo_reg>;
-	/* M6: ft5x26 takes its touch IRQ via irq_of_parse_and_map(touch_node,0).
-	 * Stock Flyme touch node has interrupt-parent=<&eintc> interrupts=<1 2>
-	 * (EINT line 1 = GPIO1 INT, type 2 = falling edge). GT9xx never reached
-	 * IRQ setup (died at i2c-test) so this was latent; ft5x26 needs it. */
+	/* Touch IRQ is EINT1 on GPIO10; reset is GPIO56. */
 	interrupt-parent = <&eintc>;
 	interrupts = <1 2>;
 	debounce = <1 0>;
 	charger_supported = <1>;
-	product = "Jim";
-	slave_address = <93 72 0 0 0 0 0 0 0 0 0 0 0 0 0 0>;
+	product = "s25";
+	slave_address = <56 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0>;
 	algo_id = <1>;
 	hmx_irq_config = <3>;
 	goodix_irq_config = <2>;
 	need_wd_check_status = <1>;
-	x_max = <720>;
-	y_max = <1280>;
-	x_max_mt = <720>;
-	y_max_mt = <1280>;
+	x_max = <1080>;
+	y_max = <1920>;
+	x_max_mt = <1080>;
+	y_max_mt = <1920>;
 	goodix,product_id = "GT917D";
 	goodix,test-types = <0x80007>;/*test types*/
 	goodix,panel-max = <3948>;
@@ -269,7 +239,7 @@ hw-dev-detect@0{
 	goodix,special_raw_data_limit = <>;
 	goodix,shortcircut-threshold = <0>;
 	fw_upgrade_delay = <30000>;
-	/* stock Flyme DTB value (chip outputs 1080x1920-space coords) */
+	/* Controller reports coordinates in the panel's 1080x1920 space. */
 	tpd-resolution = <1080 1920>;
 	use-tpd-button = <0>;
 	tpd-key-num = <3>;
@@ -295,36 +265,35 @@ hw-dev-detect@0{
 	};
 	ctp_pins_eint_as_int: ctp_as_eint@0 {
 		pins_cmd_dat {
-			pins = <PINMUX_GPIO1__FUNC_GPIO1>;
+			pins = <PINMUX_GPIO10__FUNC_GPIO10>;
 			slew-rate = <0>;
 			bias-disable;
 		};
 	};
 	ctp_pins_eint_output0: eintoutput0 {
 		pins_cmd_dat {
-			pins = <PINMUX_GPIO1__FUNC_GPIO1>;
+			pins = <PINMUX_GPIO10__FUNC_GPIO10>;
 			slew-rate = <1>;
 			output-low;
 		};
 	};
 	ctp_pins_eint_output1: eintoutput1 {
 		pins_cmd_dat {
-			pins = <PINMUX_GPIO1__FUNC_GPIO1>;
+			pins = <PINMUX_GPIO10__FUNC_GPIO10>;
 			slew-rate = <1>;
 			output-high;
 		};
 	};
 	ctp_pins_rst_output0: rstoutput0 {
 		pins_cmd_dat {
-			/* stock Flyme DTB: touch RST = GPIO42 (donor had GPIO79) */
-			pins = <PINMUX_GPIO42__FUNC_GPIO42>;
+			pins = <PINMUX_GPIO56__FUNC_GPIO56>;
 			slew-rate = <1>;
 			output-low;
 		};
 	};
 	ctp_pins_rst_output1: rstoutput1 {
 		pins_cmd_dat {
-			pins = <PINMUX_GPIO42__FUNC_GPIO42>;
+			pins = <PINMUX_GPIO56__FUNC_GPIO56>;
 			slew-rate = <1>;
 			output-high;
 		};
@@ -332,22 +301,28 @@ hw-dev-detect@0{
 };
 
 &i2c0 {
-	/* donor (Honor "Jim") himax addr 0x48 from drvgen cust.dtsi — real M6 has no chip there */
+	/* Unused alternate controller address. */
 	cap_touch@48 {
 		status = "disabled";
 	};
-	/* stock Flyme 7.1.2.0G DTB claims Goodix GT9xx@0x5d, but THIS unit's panel
-	 * is Focaltech FT5x46@0x38 (verified live: chip-id reg 0xA3=0x54="FT5x46",
-	 * 0xA8 vendor=0x80). Goodix driver no-ACKs at 0x5d forever. Disable the
-	 * Goodix node, bind the FT5x26 driver at 0x38 instead. */
+	/* The FocalTech controller is addressed at 0x38. */
 	cap_touch@5d {
 		compatible = "mediatek,cap_touch";
 		reg = <0x5d>;
 		status = "disabled";
 	};
 	ft5x26@38 {
-		compatible = "mediatek,ft5x26_touch";
+		compatible = "mediatek,cap_touch";
 		reg = <0x38>;
+		interrupt-parent = <&eintc>;
+		interrupts = <1 2>;
+		rst-gpio = <&pio 56 0>;
+		int-gpio = <&pio 10 0>;
+		pinctrl-names = "default", "state_eint_as_int", "state_rst_output0", "state_rst_output1";
+		pinctrl-0 = <&ctp_pins_default>;
+		pinctrl-1 = <&ctp_pins_eint_as_int>;
+		pinctrl-2 = <&ctp_pins_rst_output0>;
+		pinctrl-3 = <&ctp_pins_rst_output1>;
 		status = "okay";
 	};
 };
@@ -385,7 +360,7 @@ hw-dev-detect@0{
 			output-low;
 		};
 	};
-	/* M6: AW3643 flash EN/HWEN = GPIO99 (stock flash0_en0/en1, 0x6300) */
+	/* AW3643 flash EN/HWEN = GPIO99. */
 	flashlight_pins_hwen_high: hwen_high {
 		pins_cmd_dat {
 			pins = <PINMUX_GPIO99__FUNC_GPIO99>;
@@ -400,7 +375,7 @@ hw-dev-detect@0{
 			output-low;
 		};
 	};
-	/* M6: AW8738 speaker-PA EN pin = GPIO14 (driver drives level via gpiolib 14) */
+	/* AW8738 speaker-PA EN pin = GPIO14. */
 	aw8738_pins_default: aw8738_default {
 	};
 	aw8738_pins_en: aw8738_en {
@@ -521,7 +496,7 @@ hw-dev-detect@0{
 	pinctrl-10 = <&camera_pins_cam2_rst1>;
 	pinctrl-11 = <&camera_pins_cam2_pnd0>;
 	pinctrl-12 = <&camera_pins_cam2_pnd1>;*/
-	/* stock boot DTB exposes these as the camera GPIO LDO states. */
+	/* Secondary camera supply control states. */
 	pinctrl-9 = <&camera_pins_sub_vcamd0>;
 	pinctrl-10 = <&camera_pins_sub_vcamd1>;
 	status = "okay";
@@ -616,7 +591,7 @@ hw-dev-detect@0{
 
 	mtkfb_pins_lcd_bias_enp0: lcd_bias_enp0_gpio {
 		pins_cmd_dat {
-			pins = <PINMUX_GPIO12__FUNC_GPIO12>;
+			pins = <PINMUX_GPIO43__FUNC_GPIO43>;
 			slew-rate = <1>;
 			output-low;
 		};
@@ -624,7 +599,23 @@ hw-dev-detect@0{
 
 	mtkfb_pins_lcd_bias_enp1: lcd_bias_enp1_gpio {
 		pins_cmd_dat {
-			pins = <PINMUX_GPIO12__FUNC_GPIO12>;
+			pins = <PINMUX_GPIO43__FUNC_GPIO43>;
+			slew-rate = <1>;
+			output-high;
+		};
+	};
+
+	mtkfb_pins_lcd_bias_enn0: lcd_bias_enn0_gpio {
+		pins_cmd_dat {
+			pins = <PINMUX_GPIO42__FUNC_GPIO42>;
+			slew-rate = <1>;
+			output-low;
+		};
+	};
+
+	mtkfb_pins_lcd_bias_enn1: lcd_bias_enn1_gpio {
+		pins_cmd_dat {
+			pins = <PINMUX_GPIO42__FUNC_GPIO42>;
 			slew-rate = <1>;
 			output-high;
 		};
@@ -636,7 +627,8 @@ hw-dev-detect@0{
 
 &mtkfb {
 	pinctrl-names = "default", "mode_te_gpio", "mode_te_te", "lcm_rst_out0_gpio",
-	"lcm_rst_out1_gpio", "lcd_bias_enp0_gpio", "lcd_bias_enp1_gpio";
+	"lcm_rst_out1_gpio", "lcd_bias_enp0_gpio", "lcd_bias_enp1_gpio",
+	"lcd_bias_enn0_gpio", "lcd_bias_enn1_gpio";
 	pinctrl-0 = <&mtkfb_pins_default>;
 	pinctrl-1 = <&mtkfb_pins_mode_te_gpio>;
 	pinctrl-2 = <&mtkfb_pins_mode_te_te>;
@@ -644,6 +636,8 @@ hw-dev-detect@0{
 	pinctrl-4 = <&mtkfb_pins_lcm_reset1>;
 	pinctrl-5 = <&mtkfb_pins_lcd_bias_enp0>;
 	pinctrl-6 = <&mtkfb_pins_lcd_bias_enp1>;
+	pinctrl-7 = <&mtkfb_pins_lcd_bias_enn0>;
+	pinctrl-8 = <&mtkfb_pins_lcd_bias_enn1>;
 	status = "okay";
 };/* DISPSYS GPIO standardization end */
 
@@ -688,14 +682,7 @@ hw-dev-detect@0{
 };
 /* CONSYS end */
 
-/* M6 BT FIX (2026-06-13): donor mt6755.dtsi disabled the XO_CONN (WCN/connectivity)
- * PMIC clock buffer — clkbuf-config index[1]=0 (CLOCK_BUFFER_DISABLE). Stock Flyme
- * sets it =1 (CLOCK_BUFFER_SW_CONTROL). With XO_CONN off, the chip boots (26MHz) and
- * WiFi works (active), but the BT subsystem never gets its co-clock -> WMT func-on
- * event never lands in btif_buf (need(6) have(0)) -> firmware assert reason 33 ->
- * connsys coredump -> chip reset. Restore CONN buffer to stock value (match ground
- * truth). The consys code itself warns: "Keep XO_CONN SW default on ... otherwise
- * WMT power on failed issue" (mtk_wcn_consys_hw.c). */
+/* Keep the connectivity XO_CONN path enabled for this board. */
 &rf_clock_buffer_ctrl {
 	mediatek,clkbuf-config = <2 1 1 1>;
 };
@@ -798,7 +785,7 @@ hw-dev-detect@0{
 	};
 	aud_pins_extamp_high: audexamphigh {
 		pins_cmd_dat {
-			pins = <PINMUX_GPIO115__FUNC_GPIO115>;/*ext spk amp EN = GPIO115 per stock Flyme DTB (was wrongly GPIO12)*/
+			pins = <PINMUX_GPIO115__FUNC_GPIO115>;/* external speaker amplifier enable */
 			slew-rate = <1>;
 			output-high;
 		};
@@ -806,7 +793,7 @@ hw-dev-detect@0{
 
 	aud_pins_extamp_low: audexamplow {
 		pins_cmd_dat {
-			pins = <PINMUX_GPIO115__FUNC_GPIO115>;/*ext spk amp EN = GPIO115 per stock Flyme DTB (was wrongly GPIO12)*/
+			pins = <PINMUX_GPIO115__FUNC_GPIO115>;/* external speaker amplifier enable */
 			slew-rate = <1>;
 			output-low;
 		};
@@ -842,9 +829,7 @@ hw-dev-detect@0{
 		};
 	};
 
-	/* M6 BIAS FIX: hpdepop moved GPIO24 -> GPIO16 (stock Flyme). GPIO24 is the
-	 * panel TPS65132 ENP enable on this board; audio driving it low de-popped
-	 * the +bias rail and blacked the screen. GPIO16 = stock audio hpdepop. */
+	/* Audio headphone depop uses GPIO16; panel bias rails are separate. */
 	aud_pins_hpdepop_high: audhpdepophigh {
 		pins_cmd_dat {
 			pins = <PINMUX_GPIO16__FUNC_GPIO16>;
@@ -1038,17 +1023,12 @@ hw-dev-detect@0{
 	pinctrl-5 = <&nfc_eint_high>;
 	pinctrl-6 = <&nfc_eint_low>;
 	pinctrl-7 = <&nfc_irq_init>;
-	/* M6 SCREEN FIX (stock DTB/LK reverse 2026-06-12): GPIO27 is the TPS65132
-	 * ENN bias rail on this board (stock lcd_bias_enn), NOT an NFC eint.
-	 * mt6605 probe drove GPIO27 low at ~1.4s -> VSN(-5.5V) off -> black panel.
-	 * Donor (Honor) wiring; real M6 NFC eint is GPIO15 per stock DTS. */
+	/* GPIO27 is reserved for the disabled NFC path; panel ENN is GPIO42. */
 	status = "disabled";
 };
 /* NFC end */
 
-/* M6 KEYPAD (stock Flyme 7.1.2.0G DTB): our node had no key map -> kpd driver
- * used donor default -> volume keys swapped/wrong. Stock matrix: pos0=VOLUMEDOWN
- * (0x72/114), pos1=VOLUMEUP (0x73/115); 72-entry map, rest unused. Power via PMIC. */
+/* Keypad matrix and PMIC power-key mapping. */
 &keypad {
 	mediatek,kpd-key-debounce = <0x400>;
 	mediatek,kpd-sw-pwrkey = <0x74>;
@@ -1070,12 +1050,11 @@ hw-dev-detect@0{
 	mediatek,kpd-hw-factory-key = <0x00>;
 	status = "okay";
 };
-/* M6 mBack FINGERPRINT (2026-06-13): board uses GOODIX, not sunwave (donor
- * mis-selected, same class as the touch fix). Disable the old mediatek,fingerprint
- * (sunwave) node and wire the Goodix gf_spi_tee driver per stock Flyme:
+/* The board uses the Goodix fingerprint controller.
+ * Disable the legacy node and wire the gf_spi_tee driver:
  *  - goodix,goodix-fp SPI child under spi0 (netlink route 29)
  *  - mediatek,goodix-fp node with EINT12 + 8 pinctrl states
- *  - pins: IRQ=GPIO12, MISO=GPIO95(func1), RESET=GPIO13, POWER=GPIO17 (stock GPIOs) */
+ *  - pins: IRQ=GPIO12, MISO=GPIO95(func1), RESET=GPIO13, POWER=GPIO17 */
 &fingerprint {
 	compatible="mediatek,fingerprint";
 	status = "disabled";
@@ -1145,7 +1124,7 @@ hw-dev-detect@0{
 		};
 	};
 
-	/* Goodix mBack FP pin states (stock GPIOs, raw pinmux = (gpio<<8)|func):
+	/* Goodix mBack fingerprint pin states (raw pinmux = (gpio<<8)|func):
 	 * IRQ GPIO12 (EINT12), MISO GPIO95 func1, RESET GPIO13, POWER GPIO17 */
 	fp_irq: fp_irq {
 		pins_cmd_dat { pins = <0xc00>; slew-rate = <0>; bias-pull-down = <0>; };
@@ -1233,11 +1212,11 @@ hw-dev-detect@0{
 		reg = <0x53>;
 		status = "okay";
 	};
-	/* Build Station: DCT emits this placeholder on the BQ24157 address. */
+	/* Reserved charger address. */
 	swithing_charger@6a {
 		status = "disabled";
 	};
-	/* Build Station: stock hardware profile reports BQ24157 at i2c1-006a. */
+	/* Battery charger on i2c1 address 0x6a. */
 	bq24157@6a {
 		compatible = "ti,bq2415x", "ti,bq24157", "bq24157";
 		reg = <0x6a>;
@@ -1260,10 +1239,9 @@ hw-dev-detect@0{
 		status = "disabled";
 	};
 	/*
-	 * M6 flashlight: AW3643 dual-LED flash IC. Stock Flyme binds it as
-	 * strobe_main@63 on i2c1 (FACT: stock.dts line 2278, vmlinux AW3643_probe
-	 * hardcodes addr 0x63). Declared here so leds-AW3643 binds deterministically
-	 * instead of relying on legacy MTK board-info. HWEN=GPIO99 (see &flashlight).
+	 * AW3643 dual-LED flash IC. The board binds it as
+	 * strobe_main@63 on i2c1. Declared here so leds-AW3643 binds deterministically.
+	 * HWEN is GPIO99 (see &flashlight).
 	 */
 	strobe_main@63 {
 		compatible = "mediatek,strobe_main";
@@ -1280,10 +1258,13 @@ hw-dev-detect@0{
 
 &i2c0 {
 	i2c_lcd_bias@3e {
-		compatible = "mediatek,i2c_lcd_bias";
-		reg = <0x3e>;
-		status = "okay";
+		status = "disabled";
 	};
+	i2c_lcd_bias@11 {
+		compatible = "mediatek,i2c_lcd_bias";
+		reg = <0x11>;
+		status = "okay";
+};
 };
 
 &ext_buck_vmd1 {

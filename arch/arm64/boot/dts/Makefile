@@ -1,7 +1,7 @@
 dtb-$(CONFIG_ARCH_THUNDER) += thunder-88xx.dtb
 dtb-$(CONFIG_ARCH_VEXPRESS) += rtsm_ve-aemv8a.dtb foundation-v8.dtb
 dtb-$(CONFIG_ARCH_XGENE) += apm-mustang.dtb
-dtb-$(CONFIG_ARCH_MT6755) += mt6755_fhd.dtb
+dtb-$(CONFIG_ARCH_MT6755) += s25.dtb
 
 targets += dtbs
 

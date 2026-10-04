@@ -1,21 +1,20 @@
-# Meizu M6 · Linux 3.18.140
+# Meizu S25 · Linux 3.18.140
 
-**Device:** Meizu M6, MediaTek MT6750. **Branch:** `main`.
-Kernel-only M6 source snapshot. The newer BSP development branches are listed below.
-The BSP calls this platform `mt6755`; the selected defconfig and board resources
-identify the actual phone. M6 and M6T use different panel geometry and firmware.
+**Device:** Meizu S25, MediaTek MT6755. **Branch:** `lineage-15.1`.
+This tree contains the S25 board profile and the matching display/touch bring-up
+resources. The BSP calls this platform `mt6755`.
 
 ## Hardware and source map
 
-This table reads [meizu_m6_defconfig](arch/arm64/configs/meizu_m6_defconfig). Listed options
+This table reads [s25_defconfig](arch/arm64/configs/s25_defconfig). Listed options
 are defconfig requests; they are not a newly generated configuration or a
-compilation receipt. Historical M6 bring-up does not certify every branch tip,
-and M6T does not inherit M6 hardware results.
+compilation receipt. Static bring-up does not certify every branch tip or replace
+hardware testing.
 
 | Component | Source implementation | Configuration / integration | Compiled | Working on this branch |
 |---|---|---|---|---|
 | Display panels | [LCM drivers](drivers/misc/mediatek/lcm) | `ili9881p_hd_dsi_txd` | Not rechecked | Not verified for this tip |
-| Touchscreen | [MediaTek touch drivers](drivers/input/touchscreen/mediatek) | `TOUCHSCREEN_MTK_FT5X26=y` | Not rechecked | Board-variant tests needed |
+| Touchscreen | [MediaTek touch drivers](drivers/input/touchscreen/mediatek) | `TOUCHSCREEN_MTK_FT5X0X=y` | Not rechecked | Board-variant tests needed |
 | GPU | [Mali GPU drivers](drivers/misc/mediatek/gpu) | `mali midgard r12p1` | Not rechecked | Rendering / DVFS tests needed |
 | Cameras | [Image-sensor drivers](drivers/misc/mediatek/imgsensor) | `imx278_mipi_raw ov8856jsl_mipi_raw` | Not rechecked | Camera pipeline tests needed |
 | PMIC | [MT6353](drivers/misc/mediatek/pmic/mt6353) | `MTK_PMIC_NEW_ARCH=y`, `MTK_PMIC_CHIP_MT6353=y` | Not rechecked | Power / thermal tests needed |
@@ -29,8 +28,8 @@ and M6T does not inherit M6 hardware results.
 
 Use the kernel in the repository root, `ARCH=arm64`, and an absolute
 `CROSS_COMPILE` prefix for AArch64 Android GCC 4.9. Select
-[meizu_m6_defconfig](arch/arm64/configs/meizu_m6_defconfig) and use a separate Kbuild output
-directory. The BSP image target is `Image.gz-dtb`; matching M6 board
+[s25_defconfig](arch/arm64/configs/s25_defconfig) and use a separate Kbuild output
+directory. The BSP image target is `Image.gz-dtb`; matching board
 generation inputs, ramdisk, command line and boot-image geometry are still
 required for device integration. A kernel image alone is not a ROM.
 
@@ -40,11 +39,7 @@ for matching panel, touch, power and storage resources.
 
 ## Related branches
 
-- [M6 kernel-only snapshot](https://github.com/nomorecoolnicknames/android_kernel_meizu_m6/tree/main)
-- [M6 3.18.140 BSP](https://github.com/nomorecoolnicknames/android_kernel_meizu_m6/tree/m6-linux-3.18.140)
-- [M6T board adaptation](https://github.com/nomorecoolnicknames/android_kernel_meizu_m6/tree/m6t-linux-3.18)
-- [U10 unapplied patches](https://github.com/nomorecoolnicknames/android_kernel_meizu_m6/tree/u10-linux-3.18-patches)
-- [U20 resource fragments](https://github.com/nomorecoolnicknames/android_kernel_meizu_m6/tree/u20-linux-3.18)
+- [S25 kernel profile](../../tree/lineage-15.1)
 
 ## Credits and licensing
 
