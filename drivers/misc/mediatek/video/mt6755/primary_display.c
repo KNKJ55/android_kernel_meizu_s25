@@ -92,10 +92,26 @@
 #include "mt_spm_reg.h"
 #include "mt_spm_idle.h"
 
-extern void lcm_m6_diag_read_stock_pages(void);
-extern void lcm_m6_diag_page5_2a_probe(unsigned int value, unsigned int hold_ms);
-extern void lcm_m6_diag_mode_ctrl_probe(unsigned int value, unsigned int hold_ms);
 extern void m6_led_dump_backlight_truth(const char *tag);
+
+/* Optional panel diagnostics are supplied only by panels that implement them. */
+void __attribute__((weak)) lcm_m6_diag_read_stock_pages(void)
+{
+}
+
+void __attribute__((weak)) lcm_m6_diag_page5_2a_probe(unsigned int value,
+						unsigned int hold_ms)
+{
+	(void)value;
+	(void)hold_ms;
+}
+
+void __attribute__((weak)) lcm_m6_diag_mode_ctrl_probe(unsigned int value,
+						unsigned int hold_ms)
+{
+	(void)value;
+	(void)hold_ms;
+}
 
 #define FRM_UPDATE_SEQ_CACHE_NUM (DISP_INTERNAL_BUFFER_COUNT+1)
 
