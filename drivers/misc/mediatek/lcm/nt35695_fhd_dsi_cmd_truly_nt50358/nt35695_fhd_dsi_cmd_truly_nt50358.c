@@ -107,6 +107,7 @@ static struct i2c_board_info tps65132_board_info __initdata = { I2C_BOARD_INFO(I
 #endif
 #if !defined(CONFIG_MTK_LEGACY)
 static const struct of_device_id lcm_of_match[] = {
+		{.compatible = "mediatek,i2c_lcd_bias"},
 		{.compatible = "mediatek,I2C_LCD_BIAS"},
 		{},
 };
